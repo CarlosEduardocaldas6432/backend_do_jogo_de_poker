@@ -85,6 +85,14 @@ wss.on("connection", (ws) => {
       ws.carta_puxada_3 = carta_puxada_3
       ws.carta_puxada_4 = carta_puxada_4
       ws.carta_puxada_5 = carta_puxada_5
+      ws.usuario_nome =""
+      ws.usuario_conectado = true
+      ws.usuario_saldo = 10.000
+      ws.usuario_aposta = 0
+      ws.aposta_minima_da_mesa = 1
+      ws.pot_da_mesa = 0
+      ws.esta_jogando = true
+      ws.esta_jogando = true
 
 
 
