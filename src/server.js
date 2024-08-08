@@ -5,6 +5,7 @@ const Baralho = require("./Baralho")
 dotenv.config()
 const wss = new WebSocketServer({ port: process.env.PORT || 8080 })
 
+let usuario
 let carta_puxada_1 ={};
 let carta_puxada_2 ={};
 let carta_puxada_3 ={};
@@ -40,73 +41,93 @@ function gerar_cards_para_jogo(){
     carta_puxada_5
 ];
 
-
+function getCircularReplacer() {
+  const seen = new WeakSet();
+  return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+          if (seen.has(value)) {
+              return;
+          }
+          seen.add(value);
+      }
+      return value;
+  };
+}
 
 
 // ws = cliente que conectou
 wss.on("connection", (ws) => {
    
-  function getCircularReplacer() {
-    const seen = new WeakSet();
-    return (key, value) => {
-        if (typeof value === "object" && value !== null) {
-            if (seen.has(value)) {
-                return;
-            }
-            seen.add(value);
-        }
-        return value;
-    };
-}
-
-
-
-
- const usuario_id = crypto.randomUUID()
+const usuario_id = crypto.randomUUID()
  
  let jogadores =wss.clients
- let jogadoresa_rray =[]
+ let jogadores_rray =[]
 
 
  jogadores.forEach(obj => {
-  jogadoresa_rray.push(obj);
+  jogadores_rray.push(obj);
 });
  
  ws.usuario_id = usuario_id
+ ws.on("error", console.error)
 
 
-    ws.on("error", console.error)
+ ws.carta_puxada_1 = carta_puxada_1
+ ws.carta_puxada_2 = carta_puxada_2
+ ws.carta_puxada_3 = carta_puxada_3
+ ws.carta_puxada_4 = carta_puxada_4
+ ws.carta_puxada_5 = carta_puxada_5
+ ws.usuario_nome =""
+ ws.usuario_conectado = true
+ ws.usuario_saldo = 10.000
+ ws.usuario_aposta = 0
+ ws.aposta_minima_da_mesa = 1
+ ws.pot_da_mesa = 0
+ ws.esta_jogando = true
+
+
+ ws.send(JSON.stringify(ws,getCircularReplacer()))
+
+ ws.send(JSON.stringify(jogadores_rray, getCircularReplacer()))
 
     // data = o dado que o cliente enviou
     ws.on("message",(data) =>{
 
-      ws.carta_puxada_1 = carta_puxada_1
-      ws.carta_puxada_2 = carta_puxada_2
-      ws.carta_puxada_3 = carta_puxada_3
-      ws.carta_puxada_4 = carta_puxada_4
-      ws.carta_puxada_5 = carta_puxada_5
-      ws.usuario_nome =""
-      ws.usuario_conectado = true
-      ws.usuario_saldo = 10.000
-      ws.usuario_aposta = 0
-      ws.aposta_minima_da_mesa = 1
-      ws.pot_da_mesa = 0
-      ws.esta_jogando = true
-      ws.esta_jogando = true
+      usuario = JSON.parse(data)
+      
+      if (usuario !== ws){
+        
+        ws.carta_puxada_1 = usuario.carta_puxada_1
+        ws.carta_puxada_2 = usuario.carta_puxada_2
+        ws.carta_puxada_3 = usuario.carta_puxada_3
+        ws.carta_puxada_4 = usuario.carta_puxada_4
+        ws.carta_puxada_5 = usuario.carta_puxada_5
+        ws.usuario_nome = usuario.usuario_nome
+        ws.usuario_conectado = usuario.usuario_conectado
+        ws.usuario_saldo = usuario.usuario_saldo
+        ws.usuario_aposta = usuario.usuario_aposta
+        ws.aposta_minima_da_mesa = usuario.aposta_minima_da_mesa
+        ws.pot_da_mesa = usuario.pot_da_mesa
+        ws.esta_jogando = usuario.esta_jogando
+      }
 
-
-
-        // JSON.stringify() = serve para pode envia variaveis mais complicadas
-       // wss.clients.forEach((client) => client.send(JSON.stringify(todasCartas)))
-        // wss.clients = o array de clientes que estão conectados
-        // e o forEach esta percorrendo o array
+      setTimeout(() => {   
+        ws.send(JSON.stringify(ws))
+        ws.send(JSON.stringify(jogadores_rray, getCircularReplacer()))
+      },1000);
+      
+      
+      // JSON.stringify() = serve para pode envia variaveis mais complicadas
+      // wss.clients.forEach((client) => client.send(JSON.stringify(todasCartas)))
+      // wss.clients = o array de clientes que estão conectados
+      // e o forEach esta percorrendo o array
         
       //  wss.clients.forEach((client) => client.send(data.toString()))
-        ws.send(JSON.stringify(ws))
+      
         
         
-        //ws.send(JSON.stringify(jogadoresa_rray))
-        ws.send(JSON.stringify(jogadoresa_rray, getCircularReplacer()))
+      
+        
     })
     
     //vai aparecer sempre que um cliente conecta
